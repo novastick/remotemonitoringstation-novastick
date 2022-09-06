@@ -250,11 +250,10 @@ void automaticFan(float temperatureThreshold) {
     Serial.println("forward");
   }
 }
-//forward    RELEASE
-//stop     FORWARD
+
 void windowBlinds() {
   uint32_t buttons = ss.readButtons();
-  if (!( buttons & TFTWING_BUTTON_A)) {
+  if (!(buttons & TFTWING_BUTTON_A)) {
     if (blindsOpen) {
       myservo.write(0);
     } else {
