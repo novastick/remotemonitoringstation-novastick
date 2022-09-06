@@ -47,7 +47,7 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 // Motor Shield START
 #include <Adafruit_MotorShield.h>
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *myMotor = AFMS.getMotor(3);
+Adafruit_DCMotor *myMotor = AFMS.getMotor(4);
 // Motor Shield END
 
 
@@ -181,7 +181,7 @@ void loop() {
   builtinLED();
   updateTemperature();
   windowBlinds();
-  automaticFan(20.0);
+  automaticFan(25.0);
   delay(LOOPDELAY); // To allow time to publish new code.
 }
 
@@ -219,6 +219,7 @@ void logEvent(String dataToLog) {
 
 
 void tftDrawText(String text, uint16_t color) {
+  tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(0, 0);
   tft.setTextSize(3);
   tft.setTextColor(color);
@@ -237,28 +238,6 @@ void updateTemperature() {
   delay(100);
 }
 
-void autofan(float temperaturethreshold) {
-  float c = tempsensor.readTempC();
-  if (c < temperaturethreshold) {
-    //motor off
-  } else {
-    // motor on
-  }
-}
-
-void windowBlinds() {
-  uint32_t buttons = ss.readButtons();
-  if (!( buttons & TFTWING_BUTTON_A)) {
-    if (blindsOpen) {
-      myservo.write(0);
-    } else {
-      myservo.write(180);
-    }
-    blindsOpen = !blindsOpen;
-  }
-}
-
-
 
 void automaticFan(float temperatureThreshold) {
   float c = tempsensor.readTempC();
@@ -269,5 +248,18 @@ void automaticFan(float temperatureThreshold) {
   } else {
     myMotor->run(FORWARD);
     Serial.println("forward");
+  }
+}
+//forward    RELEASE
+//stop     FORWARD
+void windowBlinds() {
+  uint32_t buttons = ss.readButtons();
+  if (!( buttons & TFTWING_BUTTON_A)) {
+    if (blindsOpen) {
+      myservo.write(0);
+    } else {
+      myservo.write(180);
+    }
+    blindsOpen = !blindsOpen;
   }
 }
