@@ -1,4 +1,3 @@
-
 #include "sensitiveInformation.h"
 
 #define FORMAT_SPIFFS_IF_FAILED true
