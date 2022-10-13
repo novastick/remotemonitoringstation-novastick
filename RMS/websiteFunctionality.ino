@@ -25,6 +25,21 @@ server.onNotFound([](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/arduino.css", "text/css");
   });
 
+server.on("/SafeLock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+  if (!request->authenticate(http_username, http_password))
+    return request->requestAuthentication();
+    safeLocked = true;
+  logEvent("Safe Locked via Website");
+  request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+});
+
+server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+  if (!request->authenticate(http_username, http_password))
+    return request->requestAuthentication();
+    safeLocked = false; 
+  logEvent("Safe Unlocked via Website");
+  request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+});
 
   // Example of a route with additional authentication (popup in browser)
   // And uses the processor function.

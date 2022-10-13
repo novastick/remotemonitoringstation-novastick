@@ -3,8 +3,13 @@
 #define FORMAT_SPIFFS_IF_FAILED true
 
 #include <Wire.h>
-
-
+#include <SPI.h>
+#include <MFRC522.h>
+#define SS_PIN  21  // ES32 Feather
+#define RST_PIN 17 // esp32 Feather. Could be others.
+MFRC522 rfid(SS_PIN, RST_PIN);
+#define LEDRed 27
+#define LEDGreen 33
 
 
 // Wifi & Webserver
@@ -57,7 +62,7 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(3);
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 
 
-
+bool safeLocked = true;
 
 boolean LEDOn = false; // State of Built-in LED true=on, false=off.
 #define LOOPDELAY 100
@@ -77,6 +82,7 @@ void setup() {
     delay(10);
   }
   delay(1000);
+
 
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
     // Follow instructions in README and install
@@ -124,7 +130,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  routesConfiguration(); // Reads routes from routesManagement
+
 
   server.begin();
 
@@ -141,6 +147,13 @@ void setup() {
 
   rtc.start();
 
+
+  SPI.begin(); // init SPI bus
+  rfid.PCD_Init(); // init MFRC522
+  pinMode(LEDRed, OUTPUT);
+  pinMode(LEDGreen, OUTPUT);
+  digitalWrite(LEDRed, LOW);
+  digitalWrite(LEDGreen, LOW);
 
   // MiniTFT Start
   if (!ss.begin()) {
@@ -177,6 +190,12 @@ void setup() {
 
 void loop() {
 
+
+
+
+
+  readRFID();
+  safeStatusDisplay();
   builtinLED();
   updateTemperature();
   windowBlinds();
@@ -230,8 +249,8 @@ void updateTemperature() {
   // Read and print out the temperature, then convert to *F
   float c = tempsensor.readTempC();
   float f = c * 9.0 / 5.0 + 32;
-  Serial.print("Temp: "); Serial.print(c); Serial.print("*C\t");
-  Serial.print(f); Serial.println("*F");
+  //Serial.print("Temp: "); Serial.print(c); Serial.print("*C\t");
+  //Serial.print(f); Serial.println("*F");
   String tempInC = String(c);
   tftDrawText(tempInC, ST77XX_WHITE);
   delay(100);
@@ -240,13 +259,13 @@ void updateTemperature() {
 
 void automaticFan(float temperatureThreshold) {
   float c = tempsensor.readTempC();
-  myMotor->setSpeed(100); 
+  myMotor->setSpeed(100);
   if (c < temperatureThreshold) {
     myMotor->run(RELEASE);
-    Serial.println("stop");
+    //Serial.println("stop");
   } else {
     myMotor->run(FORWARD);
-    Serial.println("forward");
+    //Serial.println("forward");
   }
 }
 
@@ -259,5 +278,49 @@ void windowBlinds() {
       myservo.write(180);
     }
     blindsOpen = !blindsOpen;
+  }
+}
+
+
+void safeStatusDisplay() {
+  if (safeLocked) {
+    digitalWrite(LEDRed, HIGH);
+    digitalWrite(LEDGreen, LOW);
+  } else {
+    digitalWrite(LEDRed, LOW);
+    digitalWrite(LEDGreen, HIGH);
+  }
+}
+
+void readRFID() {
+
+  String uidOfCardRead = "";
+  String validCardUID = "43 BD 8D 1A";
+  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
+    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
+      MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+      Serial.print("RFID/NFC Tag Type: ");
+      Serial.println(rfid.PICC_GetTypeName(piccType));
+
+      // print UID in Serial Monitor in the hex format
+      Serial.print("UID:");
+      for (int i = 0; i < rfid.uid.size; i++) {
+        Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
+        Serial.print(rfid.uid.uidByte[i], HEX);
+      }
+      Serial.println();
+
+      rfid.PICC_HaltA(); // halt PICC
+      rfid.PCD_StopCrypto1(); // stop encryption on PCD
+      uidOfCardRead.trim();
+      if (uidOfCardRead == validCardUID) {
+        safeLocked = false;
+        logEvent("Safe Unlocked");
+      } else {
+        safeLocked = true;
+        logEvent("Safe Locked");
+      }
+
+    }
   }
 }
