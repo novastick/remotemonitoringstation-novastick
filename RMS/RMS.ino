@@ -53,7 +53,8 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *myMotor = AFMS.getMotor(3);
 // Motor Shield END
-
+bool fanEnabled = false;            // If the fan is on or off.
+bool automaticFanControl = true;    // Automatic or manual control
 
 // MiniTFT End
 
@@ -102,7 +103,7 @@ void setup() {
   // Use this initializer (uncomment) if you're using a 0.96" 180x60 TFT
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
 
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillScreen(ST77XX_BLACK);
 
 
@@ -125,11 +126,31 @@ void setup() {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
+ tft.fillScreen(ST77XX_BLACK);
+ 
   Serial.println();
   Serial.print("Connected to the Internet");
   Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+ String ip = WiFi.localIP().toString();
+  Serial.println(ip);
+  // Print details to serial after successful connection
 
+  // Display IP on TFT
+  tft.setCursor(0, 60);
+  tft.setTextSize(2);
+  tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+  tft.setTextWrap(true);
+  ///tft.print(ip);
+
+
+
+
+  // Display IP on TFT
+  //tft.setCursor(0, 60);
+  //tft.setTextSize(2);
+  //tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+  //tft.setTextWrap(true);
+  //tft.print(ip);
 
 
   server.begin();
@@ -168,7 +189,7 @@ void setup() {
   // Use this initializer (uncomment) if you're using a 0.96" 180x60 TFT
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
 
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillScreen(ST77XX_BLACK);
 
   // MiniTFT End
@@ -189,8 +210,6 @@ void setup() {
 }
 
 void loop() {
-
-
 
 
 
@@ -243,6 +262,15 @@ void tftDrawText(String text, uint16_t color) {
   tft.setTextColor(color);
   tft.setTextWrap(true);
   tft.print(text);
+
+  
+  // Print details to serial after successful connection
+
+
+ 
+
+
+
 }
 
 void updateTemperature() {
@@ -269,8 +297,22 @@ void automaticFan(float temperatureThreshold) {
   }
 }
 
+void fanControl() {
+  if (automaticFanControl) {
+    automaticFan(25.0);
+  }
+  if (fanEnabled) {
+    myMotor->run(FORWARD);
+  } else {
+    myMotor->run(RELEASE);
+  }
+}
+
+
+
 void windowBlinds() {
   uint32_t buttons = ss.readButtons();
+
   if (!(buttons & TFTWING_BUTTON_A)) {
     if (blindsOpen) {
       myservo.write(0);
@@ -292,23 +334,56 @@ void safeStatusDisplay() {
   }
 }
 
+
+//
+//void readRFID() {
+//
+//  String uidOfCardRead = "";
+//
+//  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
+//    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
+//      MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+//      //Serial.print("RFID/NFC Tag Type: ");
+//      //Serial.println(rfid.PICC_GetTypeName(piccType));
+//
+//      // print UID in Serial Monitor in the hex format
+//      //Serial.print("UID:");
+////      for (int i = 0; i < rfid.uid.size; i++) {
+////        Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
+////        Serial.print(rfid.uid.uidByte[i], HEX);
+////      }
+//      //Serial.println();
+//
+//      rfid.PICC_HaltA(); // halt PICC
+//      rfid.PCD_StopCrypto1(); // stop encryption on PCD
+//      uidOfCardRead.trim();
+//      Serial.print("id:");
+//      Serial.println(uidOfCardRead);
+//      if (uidOfCardRead == validCardUID) {
+//        safeLocked = false;
+//        logEvent("Safe unlocked");
+//      } else {
+//        safeLocked = true;
+//        logEvent("Safe Locked");
+//      }
+//
+//    }
+//  }
+//}
+
 void readRFID() {
 
   String uidOfCardRead = "";
-  String validCardUID = "43 BD 8D 1A";
+  String validCardUID = "67 189 141 26";
+
   if (rfid.PICC_IsNewCardPresent()) { // new tag is available
     if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
       MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-      Serial.print("RFID/NFC Tag Type: ");
-      Serial.println(rfid.PICC_GetTypeName(piccType));
-
-      // print UID in Serial Monitor in the hex format
-      Serial.print("UID:");
       for (int i = 0; i < rfid.uid.size; i++) {
-        Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-        Serial.print(rfid.uid.uidByte[i], HEX);
+        uidOfCardRead += rfid.uid.uidByte[i] < 0x10 ? " 0" : " ";
+        uidOfCardRead += rfid.uid.uidByte[i];
       }
-      Serial.println();
+      Serial.println(uidOfCardRead);
 
       rfid.PICC_HaltA(); // halt PICC
       rfid.PCD_StopCrypto1(); // stop encryption on PCD
@@ -320,7 +395,6 @@ void readRFID() {
         safeLocked = true;
         logEvent("Safe Locked");
       }
-
     }
   }
 }
