@@ -1,6 +1,6 @@
 void routesConfiguration() {
 
-server.onNotFound([](AsyncWebServerRequest * request) {
+  server.onNotFound([](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/404.html");
   });
 
@@ -25,21 +25,21 @@ server.onNotFound([](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/arduino.css", "text/css");
   });
 
-server.on("/SafeLock",  HTTP_GET, [](AsyncWebServerRequest * request) {
-  if (!request->authenticate(http_username, http_password))
-    return request->requestAuthentication();
+  server.on("/SafeLock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
     safeLocked = true;
-  logEvent("Safe Locked via Website");
-  request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-});
+    logEvent("Safe Locked via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
 
-server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
-  if (!request->authenticate(http_username, http_password))
-    return request->requestAuthentication();
-    safeLocked = false; 
-  logEvent("Safe Unlocked via Website");
-  request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-});
+  server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    safeLocked = false;
+    logEvent("Safe Unlocked via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
 
   // Example of a route with additional authentication (popup in browser)
   // And uses the processor function.
@@ -76,6 +76,33 @@ server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
     logEvent("Log Event Download");
     request->send(SPIFFS, "/logEvents.csv", "text/html", true);
   });
+  server.on("/FanManualOn",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    fanEnabled = true;
+    logEvent("Fan Manual Control: On");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+
+server.on("/FanControl",  HTTP_GET, [](AsyncWebServerRequest * request) {
+  if (!request->authenticate(http_username, http_password))
+    return request->requestAuthentication();
+  automaticFanControl = !automaticFanControl;
+  logEvent("Fan Manual Control: On");
+  request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+});
+
+
+ 
+
+
+  server.on("/FanManualOff",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    fanEnabled = false;
+    logEvent("Fan Manual Control: Off");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
 }
 
 String getDateTime() {
@@ -98,10 +125,16 @@ String processor(const String& var) {
     String datetime = getDateTime();
     return datetime;
   }
-if (var == "TEMPERATURE") {
-  return String(tempsensor.readTempC());
+  if (var == "TEMPERATURE") {
+    return String(tempsensor.readTempC());
+  }
+if (var == "FANCONTROL") {
+  if (automaticFanControl) {
+    return "Automatic";
+  } else {
+    return "Manual";
+  }
 }
-
 
   // Default "catch" which will return nothing in case the HTML has no variable to replace.
   return String();

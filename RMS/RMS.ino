@@ -126,12 +126,12 @@ void setup() {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
- tft.fillScreen(ST77XX_BLACK);
- 
+  tft.fillScreen(ST77XX_BLACK);
+
   Serial.println();
   Serial.print("Connected to the Internet");
   Serial.print("IP address: ");
- String ip = WiFi.localIP().toString();
+  String ip = WiFi.localIP().toString();
   Serial.println(ip);
   // Print details to serial after successful connection
 
@@ -206,19 +206,20 @@ void setup() {
   // ESP32Servo End
 
   AFMS.begin(); // Motor Shield Start
+  routesConfiguration();
 
 }
 
 void loop() {
 
 
-
+  fanControl();
   readRFID();
   safeStatusDisplay();
   builtinLED();
   updateTemperature();
   windowBlinds();
-  automaticFan(25.0);
+//  automaticFan(25.0);
   delay(LOOPDELAY); // To allow time to publish new code.
 }
 
@@ -263,11 +264,11 @@ void tftDrawText(String text, uint16_t color) {
   tft.setTextWrap(true);
   tft.print(text);
 
-  
+
   // Print details to serial after successful connection
 
 
- 
+
 
 
 
@@ -289,14 +290,15 @@ void automaticFan(float temperatureThreshold) {
   float c = tempsensor.readTempC();
   myMotor->setSpeed(100);
   if (c < temperatureThreshold) {
-    myMotor->run(RELEASE);
+    //myMotor->run(RELEASE);
+    fanEnabled = false;
     //Serial.println("stop");
   } else {
-    myMotor->run(FORWARD);
+    fanEnabled = true;
+    //myMotor->run(FORWARD);
     //Serial.println("forward");
   }
 }
-
 void fanControl() {
   if (automaticFanControl) {
     automaticFan(25.0);
@@ -307,6 +309,8 @@ void fanControl() {
     myMotor->run(RELEASE);
   }
 }
+
+
 
 
 
@@ -374,7 +378,7 @@ void safeStatusDisplay() {
 void readRFID() {
 
   String uidOfCardRead = "";
-  String validCardUID = "67 189 141 26";
+  String validCardUID = "156 135 43 73";
 
   if (rfid.PICC_IsNewCardPresent()) { // new tag is available
     if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
