@@ -1,9 +1,26 @@
 void routesConfiguration() {
 
-  server.onNotFound([](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/404.html");
+server.onNotFound([](AsyncWebServerRequest * request) {
+    if (request->url().endsWith(F(".jpg"))) {
+      // Extract the filename that was attempted
+      int fnsstart = request->url().lastIndexOf('/');
+      String fn = request->url().substring(fnsstart);
+      // Load the image from SPIFFS and send to the browser.
+      request->send(SPIFFS, fn, "image/jpeg", true);
+    } else {
+      request->send(SPIFFS, "/404.html");
+    }
   });
 
+
+server.on("/admin.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(usernameAdmin, passwordAdmin)){
+      logEvent("Administrator Access Attempt failed");
+      return request->requestAuthentication();
+    }
+    logEvent("Admin access");
+    request->send(SPIFFS, "/admin.html", "text/html", false, processor);
+  });
 
 
   // Example of a 'standard' route
@@ -96,14 +113,14 @@ server.on("/FanControl",  HTTP_GET, [](AsyncWebServerRequest * request) {
  
 
 
-  server.on("/FanManualOff",  HTTP_GET, [](AsyncWebServerRequest * request) {
-    if (!request->authenticate(http_username, http_password))
-      return request->requestAuthentication();
-    fanEnabled = false;
-    logEvent("Fan Manual Control: Off");
-    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-  });
-}
+ // server.on("/FanManualOff",  HTTP_GET, [](AsyncWebServerRequest * request) {
+   // if (!request->authenticate(http_username, http_password))
+     // return request->requestAuthentication();
+    //fanEnabled = false;
+   // logEvent("Fan Manual Control: Off");
+    //request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+ // });
+//}
 
 String getDateTime() {
   DateTime rightNow = rtc.now();
