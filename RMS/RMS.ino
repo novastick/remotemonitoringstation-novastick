@@ -137,20 +137,16 @@ void setup() {
 
   // Display IP on TFT
   tft.setCursor(0, 60);
+
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+  tft.print(ip);
   tft.setTextWrap(true);
-  ///tft.print(ip);
+  tft.print(ip);
+  tft.fillScreen(ST77XX_BLACK);
+ 
 
 
-
-
-  // Display IP on TFT
-  //tft.setCursor(0, 60);
-  //tft.setTextSize(2);
-  //tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
-  //tft.setTextWrap(true);
-  //tft.print(ip);
 
 
   server.begin();
@@ -219,7 +215,7 @@ void loop() {
   builtinLED();
   updateTemperature();
   windowBlinds();
-//  automaticFan(25.0);
+  //  automaticFan(25.0);
   delay(LOOPDELAY); // To allow time to publish new code.
 }
 
@@ -290,12 +286,12 @@ void automaticFan(float temperatureThreshold) {
   float c = tempsensor.readTempC();
   myMotor->setSpeed(100);
   if (c < temperatureThreshold) {
-    //myMotor->run(RELEASE);
+    myMotor->run(RELEASE);
     fanEnabled = false;
     //Serial.println("stop");
   } else {
     fanEnabled = true;
-    //myMotor->run(FORWARD);
+    myMotor->run(FORWARD);
     //Serial.println("forward");
   }
 }
@@ -339,41 +335,7 @@ void safeStatusDisplay() {
 }
 
 
-//
-//void readRFID() {
-//
-//  String uidOfCardRead = "";
-//
-//  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
-//    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
-//      MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-//      //Serial.print("RFID/NFC Tag Type: ");
-//      //Serial.println(rfid.PICC_GetTypeName(piccType));
-//
-//      // print UID in Serial Monitor in the hex format
-//      //Serial.print("UID:");
-////      for (int i = 0; i < rfid.uid.size; i++) {
-////        Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-////        Serial.print(rfid.uid.uidByte[i], HEX);
-////      }
-//      //Serial.println();
-//
-//      rfid.PICC_HaltA(); // halt PICC
-//      rfid.PCD_StopCrypto1(); // stop encryption on PCD
-//      uidOfCardRead.trim();
-//      Serial.print("id:");
-//      Serial.println(uidOfCardRead);
-//      if (uidOfCardRead == validCardUID) {
-//        safeLocked = false;
-//        logEvent("Safe unlocked");
-//      } else {
-//        safeLocked = true;
-//        logEvent("Safe Locked");
-//      }
-//
-//    }
-//  }
-//}
+
 
 void readRFID() {
 
