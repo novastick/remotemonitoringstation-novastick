@@ -63,3 +63,11 @@ li a:hover {
 .active {
     background-color: #04AA6D;
 }
+
+
+.guest{
+  background-color: #f2ff00;  
+}
+.admin{
+  background-color: #ff0000;  
+}

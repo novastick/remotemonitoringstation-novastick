@@ -13,7 +13,7 @@ void routesConfiguration() {
   });
 
 
- server.on("/admin.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/admin.html", HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(usernameAdmin, passwordAdmin)) {
       logEvent("Administrator Access Attempt failed");
       return request->requestAuthentication();
@@ -57,7 +57,7 @@ void routesConfiguration() {
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
- server.on("/SafeLockAdmin",  HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/SafeLockAdmin",  HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(usernameAdmin, passwordAdmin))
       return request->requestAuthentication();
     safeLocked = true;
@@ -121,7 +121,7 @@ void routesConfiguration() {
       return request->requestAuthentication();
     automaticFanControl = !automaticFanControl;
     logEvent("Fan Manual Control: On");
-    request->send(SPIFFS, "dashboard.html", "text/html", false, processor);
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
 
@@ -135,7 +135,7 @@ void routesConfiguration() {
 }
 
 
-  
+
 String getDateTime() {
   DateTime rightNow = rtc.now();
   char csvReadableDate[25];
