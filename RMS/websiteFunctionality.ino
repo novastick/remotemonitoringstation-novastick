@@ -109,7 +109,7 @@ void routesConfiguration() {
     request->send(SPIFFS, "/logEvents.csv", "text/html", true);
   });
   server.on("/FanManualOn",  HTTP_GET, [](AsyncWebServerRequest * request) {
-    if (!request->authenticate(usernameGuest, passwordGuest))
+    if (!request->authenticate(usernameGuest, passwordGuest)&&!request->authenticate(usernameAdmin, passwordAdmin) )
       return request->requestAuthentication();
     fanEnabled = true;
     logEvent("Fan Manual Control: On");

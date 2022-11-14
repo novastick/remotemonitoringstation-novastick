@@ -126,7 +126,6 @@ void setup() {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
-  tft.fillScreen(ST77XX_BLACK);
 
   Serial.println();
   Serial.print("Connected to the Internet");
@@ -137,13 +136,13 @@ void setup() {
 
   // Display IP on TFT
   tft.setCursor(0, 60);
-
+ tft.fillScreen(ST77XX_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
   tft.print(ip);
   tft.setTextWrap(true);
-  tft.print(ip);
-  tft.fillScreen(ST77XX_BLACK);
+  
+
  
 
 
